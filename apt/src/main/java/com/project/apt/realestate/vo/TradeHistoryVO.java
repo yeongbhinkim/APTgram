@@ -1,12 +1,18 @@
 package com.project.apt.realestate.vo;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.ToString;
+import com.project.apt.realestate.dto.TradeHistoryResponseDto.TbLnOpendataRtmsV.InnerRow;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.*;
 
 @Getter
 @Entity
+@Builder
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class TradeHistoryVO {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +23,7 @@ public class TradeHistoryVO {
     private String bjdongCd;      // 법정동코드
     private String bjdongNm;      // 법정동명
     private String landGbn;       // 지번구분
-    private String landGbnMm;     // 지번구분명
+    private String landGbnNm;     // 지번구분명
     private String bonbeon;       // 본번
     private String bubeon;        // 부번
     private String bldgNm;        // 건물명
@@ -31,5 +37,32 @@ public class TradeHistoryVO {
     private String buildYear;     // 건축연도
     private String houseType;     // 건물용도
     private String reqGbn;        // 신고구분
-    private String rdealerLawDnm; // 신고한 공인중개사 시군구명
+    private String rdealerLawdnm; // 신고한 공인중개사 시군구명
+
+    public static TradeHistoryVO createFromJson(InnerRow innerRow) {
+        return TradeHistoryVO
+                .builder()
+                .accYear(innerRow.getAccYear())
+                .sggCd(innerRow.getSggCd())
+                .sggNm(innerRow.getSggNm())
+                .bjdongCd(innerRow.getBjdongCd())
+                .bjdongNm(innerRow.getBjdongNm())
+                .landGbn(innerRow.getLandGbn())
+                .landGbnNm(innerRow.getLandGbnNm())
+                .bonbeon(innerRow.getBonbeon())
+                .bubeon(innerRow.getBubeon())
+                .bldgNm(innerRow.getBldgNm())
+                .dealYmd(innerRow.getDealYmd())
+                .objAmt(innerRow.getObjAmt())
+                .bldgArea(innerRow.getBldgArea())
+                .totArea(innerRow.getTotArea())
+                .floor(innerRow.getFloor())
+                .rightGbn(innerRow.getRightGbn())
+                .cntlYmd(innerRow.getCntlYmd())
+                .buildYear(innerRow.getBuildYear())
+                .houseType(innerRow.getHouseType())
+                .reqGbn(innerRow.getReqGbn())
+                .rdealerLawdnm(innerRow.getRdealerLawdnm())
+                .build();
+    }
 }
