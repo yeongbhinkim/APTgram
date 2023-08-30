@@ -1,11 +1,11 @@
 package com.project.apt.realestate.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.apt.realestate.dto.TradeHistoryResponseDto;
-import com.project.apt.realestate.dto.TradeHistoryResponseDto.TbLnOpendataRtmsV.InnerRow;
-import com.project.apt.realestate.repository.TradeHistoryRepository;
+import com.project.apt.realestate.dto.LeaseHistoryResponseDto;
+import com.project.apt.realestate.dto.LeaseHistoryResponseDto.TbLnOpendataRentV.InnerRow;
+import com.project.apt.realestate.repository.LeaseHistoryRepository;
 import com.project.apt.realestate.util.CustomTrxUtil;
-import com.project.apt.realestate.vo.TradeHistoryVO;
+import com.project.apt.realestate.vo.LeaseHistoryVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,12 +26,12 @@ import static com.project.apt.realestate.util.CustomTrxUtil.generateTrxNo;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class TradeHistoryApi {
+public class LeaseHistoryApi {
 
 	private final ObjectMapper objectMapper;
-	private final TradeHistoryRepository tradeHistoryRepository;
+	private final LeaseHistoryRepository leaseHistoryRepository;
 
-	@GetMapping("/api")
+	@GetMapping("/api2")
 	public void getTradeHistory() throws IOException {
 
 		String startTime = generateCurrentTime(); // 현재 시간을 밀리세컨드까지 구한다.
@@ -43,7 +43,7 @@ public class TradeHistoryApi {
 		StringBuilder urlBuilder = new StringBuilder("http://openapi.seoul.go.kr:8088"); // URL
 		urlBuilder.append("/" + URLEncoder.encode("7741447056666f6f35304365597842","UTF-8") ); // 인증키
 		urlBuilder.append("/" + URLEncoder.encode("json","UTF-8") ); // 요청파일타입
-		urlBuilder.append("/" + URLEncoder.encode("tbLnOpendataRtmsV","UTF-8")); // 서비스명
+		urlBuilder.append("/" + URLEncoder.encode("tbLnOpendataRentV","UTF-8")); // 서비스명
 		urlBuilder.append("/" + URLEncoder.encode("1","UTF-8")); // 요청시작위치 (페이징 시작 번호)
 		urlBuilder.append("/" + URLEncoder.encode("10","UTF-8")); // 요청종료위치 (페이징 끝 번호)
 
@@ -79,21 +79,21 @@ public class TradeHistoryApi {
 
 		// 응답 데이터를 Dto 객체로 파싱한다.
 		String responseBody = sb.toString();
-		TradeHistoryResponseDto tradeHistoryResponseDto = objectMapper.readValue(responseBody, TradeHistoryResponseDto.class);
-		InnerRow[] row = tradeHistoryResponseDto.getTbLnOpendataRtmsV().getRow();
+		LeaseHistoryResponseDto leaseHistoryResponseDto = objectMapper.readValue(responseBody, LeaseHistoryResponseDto.class);
+		InnerRow[] row = leaseHistoryResponseDto.getTbLnOpendataRentV().getRow();
 
 		// Dto 객체에 담긴 응답 데이터를 실제 VO 객체에 매핑한다.
-		List<TradeHistoryVO> tradeHistoryVOList = new ArrayList<>();
+		List<LeaseHistoryVO> leaseHistoryVOList = new ArrayList<>();
 		for (InnerRow innerRow : row) {
-			TradeHistoryVO tradeHistoryVO = TradeHistoryVO.createFromJson(innerRow);
-			tradeHistoryVOList.add(tradeHistoryVO);
+			LeaseHistoryVO leaseHistoryVO = LeaseHistoryVO.createFromJson(innerRow);
+			leaseHistoryVOList.add(leaseHistoryVO);
 		}
 
 		// VO 객체를 DB에 저장한다.
-		tradeHistoryRepository.saveAll(tradeHistoryVOList);
+		leaseHistoryRepository.saveAll(leaseHistoryVOList);
 
-		log.info("[{}] 가져온 데이터 수 = {}", trxNo, tradeHistoryVOList.size());
-		log.info("[{}] 가져온 데이터 = {}", trxNo, tradeHistoryVOList);
+		log.info("[{}] 가져온 데이터 수 = {}", trxNo, leaseHistoryVOList.size());
+		log.info("[{}] 가져온 데이터 = {}", trxNo, leaseHistoryVOList);
 
 		String endTime = generateCurrentTime(); // 현재 시간을 밀리세컨드까지 구한다.
 		long trxTime = CustomTrxUtil.calculateTrxTime(startTime, endTime); // API 트랜잭션 소요 시간을 구한다.

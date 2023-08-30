@@ -13,7 +13,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class TradeHistoryVO {
+public class TradeHistoryVO extends BaseVO {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int tradeHistoryId;   // 실거래기록 번호
