@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.apt.realestate.dto.TradeHistoryResponseDto;
 import com.project.apt.realestate.dto.TradeHistoryResponseDto.TbLnOpendataRtmsV.InnerRow;
 import com.project.apt.realestate.repository.TradeHistoryRepository;
-import com.project.apt.realestate.util.CustomTrxUtil;
 import com.project.apt.realestate.vo.TradeHistoryVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +19,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.project.apt.realestate.util.CustomTrxUtil.generateCurrentTime;
-import static com.project.apt.realestate.util.CustomTrxUtil.generateTrxNo;
+import static com.project.apt.realestate.util.CustomDateUtil.*;
+import static com.project.apt.realestate.util.CustomTrxUtil.*;
 
 @Slf4j
 @RestController
@@ -34,6 +33,7 @@ public class TradeHistoryApi {
 	@GetMapping("/api")
 	public void getTradeHistory() throws IOException {
 
+		String limit = "100";
 		String startTime = generateCurrentTime(); // 현재 시간을 밀리세컨드까지 구한다.
 		String trxNo = generateTrxNo(startTime); // 트랜잭션 번호를 생성한다.
 		log.info("[{}] ========== {} START ==========", trxNo, this.getClass().getSimpleName());
@@ -45,10 +45,21 @@ public class TradeHistoryApi {
 		urlBuilder.append("/" + URLEncoder.encode("json","UTF-8") ); // 요청파일타입
 		urlBuilder.append("/" + URLEncoder.encode("tbLnOpendataRtmsV","UTF-8")); // 서비스명
 		urlBuilder.append("/" + URLEncoder.encode("1","UTF-8")); // 요청시작위치 (페이징 시작 번호)
-		urlBuilder.append("/" + URLEncoder.encode("10","UTF-8")); // 요청종료위치 (페이징 끝 번호)
+		urlBuilder.append("/" + URLEncoder.encode(limit,"UTF-8")); // 요청종료위치 (페이징 끝 번호)
 
 		// 이하 선택값
-		urlBuilder.append("/" + URLEncoder.encode("2023","UTF-8"));
+		String yesterday = getYesterday();
+		urlBuilder.append("/" + URLEncoder.encode("","UTF-8"));
+		urlBuilder.append("/" + URLEncoder.encode("","UTF-8"));
+		urlBuilder.append("/" + URLEncoder.encode("","UTF-8"));
+		urlBuilder.append("/" + URLEncoder.encode("","UTF-8"));
+		urlBuilder.append("/" + URLEncoder.encode("","UTF-8"));
+		urlBuilder.append("/" + URLEncoder.encode("","UTF-8"));
+		urlBuilder.append("/" + URLEncoder.encode("","UTF-8"));
+		urlBuilder.append("/" + URLEncoder.encode("","UTF-8"));
+		urlBuilder.append("/" + URLEncoder.encode("","UTF-8"));
+		urlBuilder.append("/" + URLEncoder.encode(yesterday,"UTF-8"));
+		urlBuilder.append("/" + URLEncoder.encode("","UTF-8"));
 		log.info("[{}] API URL: {}", trxNo, urlBuilder);
 
 		// http 통신으로 API를 요청한다.
@@ -56,7 +67,6 @@ public class TradeHistoryApi {
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
 		conn.setRequestProperty("Content-type", "application/xml");
-		log.info("[{}] API RESPONSE CODE: {}", trxNo, conn.getResponseCode());
 
 		// API 응답 데이터를 받는다.
 		BufferedReader rd;
@@ -86,18 +96,24 @@ public class TradeHistoryApi {
 		List<TradeHistoryVO> tradeHistoryVOList = new ArrayList<>();
 		for (InnerRow innerRow : row) {
 			TradeHistoryVO tradeHistoryVO = TradeHistoryVO.createFromJson(innerRow);
-			tradeHistoryVOList.add(tradeHistoryVO);
+			if (yesterday.equals(tradeHistoryVO.getDealYmd())) {
+				tradeHistoryVOList.add(tradeHistoryVO);
+			}
 		}
 
 		// VO 객체를 DB에 저장한다.
 		tradeHistoryRepository.saveAll(tradeHistoryVOList);
 
-		log.info("[{}] 가져온 데이터 수 = {}", trxNo, tradeHistoryVOList.size());
-		log.info("[{}] 가져온 데이터 = {}", trxNo, tradeHistoryVOList);
+		log.info("[{}] 응답 코드 = {}", trxNo, tradeHistoryResponseDto.getTbLnOpendataRtmsV().getResult().getCode());
+		log.info("[{}] 응답 메시지 = {}", trxNo, tradeHistoryResponseDto.getTbLnOpendataRtmsV().getResult().getMessage());
+		log.info("[{}] 총 데이터 수 = {}", trxNo, tradeHistoryResponseDto.getTbLnOpendataRtmsV().getListTotalCount());
+		log.info("[{}] 가져온 데이터 수 = {}", trxNo, limit);
+		log.info("[{}] DB에 저장한 데이터 수 = {}", trxNo, tradeHistoryVOList.size());
+		log.info("[{}] DB에 저장한 데이터 = {}", trxNo, tradeHistoryVOList);
 
 		String endTime = generateCurrentTime(); // 현재 시간을 밀리세컨드까지 구한다.
-		long trxTime = CustomTrxUtil.calculateTrxTime(startTime, endTime); // API 트랜잭션 소요 시간을 구한다.
-		log.info("[{}] 소요시간: {}", trxNo, trxTime);
+		long trxTime = calculateTrxTime(startTime, endTime); // API 트랜잭션 소요 시간을 구한다.
+		log.info("[{}] 소요시간(Millis): {}", trxNo, trxTime);
 		log.info("[{}] ========== {} END ==========", trxNo, this.getClass().getSimpleName());
 	}
 }

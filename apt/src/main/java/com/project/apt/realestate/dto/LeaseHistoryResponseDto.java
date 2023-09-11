@@ -17,7 +17,23 @@ public class LeaseHistoryResponseDto {
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class TbLnOpendataRentV {
+        @JsonProperty("list_total_count")
+        private String listTotalCount;
+        @JsonProperty("RESULT")
+        private InnerResult result;
         private InnerRow[] row;
+
+
+        /**
+         * 내부클래스를 이용해 JSON 파싱
+         */
+        @Data
+        public static class InnerResult {
+            @JsonProperty("CODE")
+            private String code;
+            @JsonProperty("MESSAGE")
+            private String message;
+        }
 
         /**
          * 내부클래스를 이용해 JSON 파싱
